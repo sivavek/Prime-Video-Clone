@@ -61,7 +61,7 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: sivavek
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build docker image and push to dockerhub
@@ -70,5 +70,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/prime-video-clone:latest
-            ${{ secrets.DOCKERHUB_TOKEN }}/prime-video-clone:${{ github.sha }}
+            sivavek/prime-video-clone:latest
+            sivavek/prime-video-clone:${{ github.sha }}
