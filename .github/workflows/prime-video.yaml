@@ -49,6 +49,7 @@ jobs:
         with:
           name: trivy-report
           path: trivy.txt
+          retention-days: 1
 
       - name: Setup Amazon CLI
         uses: aws-actions/configure-aws-credentials@v4
