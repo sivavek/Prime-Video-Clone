@@ -15,7 +15,7 @@ on:
     #     default: '123456789012'
 
 env:
-  SONAR_SERVER_URL: 'http://sonarqube.example.com':9000
+  SONAR_SERVER_URL: 'http://sonarqube.example.com:9000'
   SONAR_TOKEN: ''
 
 jobs:
