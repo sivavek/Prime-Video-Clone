@@ -33,6 +33,6 @@ output "ssh_command" {
   value       = "ssh -i /path/to/${var.key_name}.pem ubuntu@${aws_instance.main.public_ip}"
 }
 
-# output "repository_url" {
-#   value = aws_ecr_repository.app_repo.repository_url
-# }
+output "repository_url" {
+  value = aws_ecr_repository.app_repo.repository_url
+}

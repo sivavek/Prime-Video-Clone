@@ -52,7 +52,7 @@ variable "volume_size" {
   default     = 30
 }
 
-# variable "ecr_repo_name" {
-#   type        = string
-#   description = "ECR Repository Name"
-# }
+variable "ecr_repo_name" {
+  type        = string
+  description = "ECR Repository Name"
+}
