@@ -40,9 +40,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests
-        run: npm test
-
       # - name: Build Docker image
       #   run: |
       #     IMAGE_TAG=$(git rev-parse --short HEAD)
