@@ -1,1 +1,1 @@
-ecr_repo_name = "prime-video-app-repo"
+ecr_repo_name = "prime-video-clone"

@@ -24,6 +24,28 @@ resource "aws_ecr_repository" "app_repo" {
   }
 }
 
+resource "aws_ecr_lifecycle_policy" "app_repo_policy" {
+  repository = aws_ecr_repository.app_repo.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Remove untagged images"
+        selection = {
+          tagStatus   = "untagged"
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 1
+        }
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
+}
+
 # Get latest Ubuntu AMI
 data "aws_ami" "ubuntu" {
   most_recent = true
@@ -259,8 +281,8 @@ resource "aws_instance" "main" {
       # "pass=$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)",
 
       # Output
-      "echo 'Access Jenkins Server here --> http://'$ip':8080'",
-      "echo 'Jenkins Initial Password: '$pass''",
+      # "echo 'Access Jenkins Server here --> http://'$ip':8080'",
+      # "echo 'Jenkins Initial Password: '$pass''",
       "echo 'Access SonarQube Server here --> http://'$ip':9000'",
       "echo 'SonarQube Username & Password: admin'",
     ]
