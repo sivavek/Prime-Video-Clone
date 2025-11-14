@@ -8,7 +8,7 @@ on:
 env:
   SONAR_HOST_URL: 'http://35.154.134.145:9000'
   SONAR_TOKEN: 'squ_19113af742460f5c5210f11aa1ad66fe3d33b70d'
-  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
   ECR_REPO_NAME: 'prime-video-clone'
 
 jobs:
