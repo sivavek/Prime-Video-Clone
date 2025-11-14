@@ -20,6 +20,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.11.4
+          terraform_wrapper: false
 
       - name: Initialize Terraform
         working-directory: ./terraform-code/sonar
@@ -28,3 +29,12 @@ jobs:
       - name: Apply Terraform Configuration
         working-directory: ./terraform-code/sonar
         run: terraform apply -auto-approve
+
+      - name: Commit Terraform State
+        working-directory: ./terraform-code/sonar
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add terraform.tfstate terraform.tfstate.backup
+          git commit -m "Update Terraform state [skip ci]" || echo "No changes to commit"
+          git push
