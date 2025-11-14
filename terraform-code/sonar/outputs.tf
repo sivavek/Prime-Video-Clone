@@ -32,3 +32,7 @@ output "ssh_command" {
   description = "SSH command to connect to the instance"
   value       = "ssh -i /path/to/${var.key_name}.pem ubuntu@${aws_instance.main.public_ip}"
 }
+
+output "repository_url" {
+  value = aws_ecr_repository.app_repo.repository_url
+}

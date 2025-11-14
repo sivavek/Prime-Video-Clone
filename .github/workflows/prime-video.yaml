@@ -1,22 +1,15 @@
-name: Amazon Prime Video Clone CI/CD Pipeline
+name: CI - Amazon Prime Video Clone
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-    # inputs:
-    #   ecr_name:
-    #     description: 'Enter the ECR repo name'
-    #     required: true
-    #     default: 'prime-video-clone'
-    #   aws_account_id:
-    #     description: 'Enter your AWS Account ID'
-    #     required: true
-    #     default: '123456789012'
 
 env:
-  SONAR_SERVER_URL: 'http://3.111.171.172:9000'
+  SONAR_HOST_URL: 'http://3.111.171.172:9000'
   SONAR_TOKEN: 'squ_357be029da993784d00644497f2f3da2e0113cd9'
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  ECR_REPO_NAME: 'prime-video-clone'
 
 jobs:
   build-and-deploy:
@@ -33,52 +26,60 @@ jobs:
       - name: Sonar Scan
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ env.SONAR_SERVER_URL}}
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL}}
         uses: SonarSource/sonarqube-scan-action@v2  
         with:
           args: >
             -Dsonar.projectKey=prime-video-clone
             -Dsonar.projectName=prime-video-clone
             -Dsonar.sources=.
+            -Dsonar.qualitygate.wait=true
 
-      - name: SonarQube Quality Gate
-        uses: SonarSource/sonarqube-quality-gate-action@v1
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ env.SONAR_SERVER_URL }}
+      - name: Install dependencies
+        run: npm install
 
-      # - name: Install dependencies
-      #   run: npm install
+      - name: Trivy FileSystem Scan
+        run: trivy fs . > trivy.txt
 
-      # - name: Build Docker image
-      #   run: |
-      #     IMAGE_TAG=$(git rev-parse --short HEAD)
-      #     docker build -t ${{ github.event.inputs.aws_account_id }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ github.event.inputs.ecr_name }}:$IMAGE_TAG .
+      - name: Build Docker Image
+        run: docker build -t ${ECR_REPO_NAME} .
 
-      # - name: Log in to Amazon ECR
-      #   env:
-      #     AWS_REGION: 'ap-south-1'
-      #   run: |
-      #     aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ github.event.inputs.aws_account_id }}.dkr.ecr.$AWS_REGION.amazonaws.com
+      - name: Save Trivy Report as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-report
+          path: trivy.txt
 
-      # - name: Push Docker image to ECR
-      #   env:
-      #     AWS_REGION: 'ap-south-1'
-      #   run: |
-      #     IMAGE_TAG=$(git rev-parse --short HEAD)
-      #     docker push ${{ github.event.inputs.aws_account_id }}.dkr.ecr.$AWS_REGION.amazonaws.com/${{ github.event.inputs.ecr_name }}:$IMAGE_TAG
-   
-      # - name: Log in to Docker Hub
-      #   uses: docker/login-action@v2
+      # - name: Setup Amazon CLI
+      #   uses: aws-actions/configure-aws-credentials@v4
       #   with:
-      #     username: sivavek
-      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ap-south-1
 
-      # - name: Build docker image and push to dockerhub
-      #   uses: docker/build-push-action@v4
-      #   with:
-      #     context: .
-      #     push: true
-      #     tags: |
-      #       sivavek/prime-video-clone:latest
-      #       sivavek/prime-video-clone:${{ github.sha }}
+      # - name: Create ECR Repository (if missing)
+      #   run: |
+      #     aws ecr describe-repositories --repository-names ${ECR_REPO_NAME} \
+      #     || aws ecr create-repository --repository-name ${ECR_REPO_NAME}
+
+      # - name: Login to ECR
+      #   run: |
+      #     aws ecr get-login-password --region ap-south-1 \
+      #     | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com
+
+      # - name: Tag Docker Image
+      #   run: |
+      #     docker tag ${ECR_REPO_NAME} ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${ECR_REPO_NAME}:${{ github.run_number }}
+      #     docker tag ${ECR_REPO_NAME} ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${ECR_REPO_NAME}:latest
+
+      # - name: Push Docker Images
+      #   run: |
+      #    docker push ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${ECR_REPO_NAME}:${{ github.run_number }}
+      #    docker push ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${ECR_REPO_NAME}:latest
+
+
+      # - name: Cleanup Docker Images
+      #   run: |
+      #     docker rmi ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${ECR_REPO_NAME}:${{ github.run_number }}
+      #     docker rmi ${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/${ECR_REPO_NAME}:latest
+      #     docker images

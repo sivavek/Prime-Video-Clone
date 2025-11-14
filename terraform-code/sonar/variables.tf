@@ -51,3 +51,8 @@ variable "volume_size" {
   type        = number
   default     = 30
 }
+
+variable "ecr_repo_name" {
+  type        = string
+  description = "ECR Repository Name"
+}

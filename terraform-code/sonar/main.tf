@@ -15,6 +15,15 @@ provider "aws" {
   region = var.region
 }
 
+resource "aws_ecr_repository" "app_repo" {
+  name                 = var.ecr_repo_name
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
 # Get latest Ubuntu AMI
 data "aws_ami" "ubuntu" {
   most_recent = true
@@ -151,13 +160,22 @@ resource "aws_instance" "main" {
   }
   provisioner "remote-exec" {
     connection {
-      type = "ssh"
+      type        = "ssh"
       private_key = file("./devops-demo.pem")
-      user = "ubuntu"
-      host = self.public_ip
+      user        = "ubuntu"
+      host        = self.public_ip
     }
 
     inline = [
+      # Add SWAP memory
+      "sudo fallocate -l 4G /swapfile",
+      "sudo chmod 600 /swapfile",
+      "sudo mkswap /swapfile",
+      "sudo swapon /swapfile",
+      "echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab",
+      "sudo swapon --show",
+      "free -h",
+
       # Install AWS CLI
       # Ref: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
       "sudo apt install unzip -y",
@@ -216,26 +234,29 @@ resource "aws_instance" "main" {
       "VERSION=$(curl -L -s https://raw.githubusercontent.com/argoproj/argo-cd/stable/VERSION)",
       "curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/download/v$VERSION/argocd-linux-amd64",
       "sudo install -m 555 argocd-linux-amd64 /usr/local/bin/argocd",
-      "rm argocd-linux-amd64", 
+      "rm argocd-linux-amd64",
 
-      # Install Java 17
-      # Ref: https://www.rosehosting.com/blog/how-to-install-java-17-lts-on-ubuntu-20-04/
-      "sudo apt update -y",
-      "sudo apt install openjdk-17-jdk openjdk-17-jre -y",
-      "java -version",
+      # Install jq
+      "sudo apt-get install -y jq",
 
-      # Install Jenkins
-      # Ref: https://www.jenkins.io/doc/book/installing/linux/#debianubuntu
-      "sudo wget -O /usr/share/keyrings/jenkins-keyring.asc https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key",
-      "echo \"deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/\" | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null",
-      "sudo apt-get update -y",
-      "sudo apt-get install -y jenkins",
-      "sudo systemctl start jenkins",
-      "sudo systemctl enable jenkins",
+      # # Install Java 17
+      # # Ref: https://www.rosehosting.com/blog/how-to-install-java-17-lts-on-ubuntu-20-04/
+      # "sudo apt update -y",
+      # "sudo apt install openjdk-17-jdk openjdk-17-jre -y",
+      # "java -version",
 
-      # Get Jenkins initial login password
-      "ip=$(curl -s ifconfig.me)",
-      "pass=$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)",
+      # # Install Jenkins
+      # # Ref: https://www.jenkins.io/doc/book/installing/linux/#debianubuntu
+      # "sudo wget -O /usr/share/keyrings/jenkins-keyring.asc https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key",
+      # "echo \"deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/\" | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null",
+      # "sudo apt-get update -y",
+      # "sudo apt-get install -y jenkins",
+      # "sudo systemctl start jenkins",
+      # "sudo systemctl enable jenkins",
+
+      # # Get Jenkins initial login password
+      # "ip=$(curl -s ifconfig.me)",
+      # "pass=$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)",
 
       # Output
       "echo 'Access Jenkins Server here --> http://'$ip':8080'",
