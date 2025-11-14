@@ -15,8 +15,8 @@ on:
     #     default: '123456789012'
 
 env:
-  SONAR_SERVER_URL: 'http://sonarqube.example.com:9000'
-  SONAR_TOKEN: ''
+  SONAR_SERVER_URL: 'http://3.111.171.172:9000'
+  SONAR_TOKEN: 'squ_357be029da993784d00644497f2f3da2e0113cd9'
 
 jobs:
   build-and-deploy:
@@ -30,20 +30,20 @@ jobs:
         with:
           node-version: '18'
 
-      # - name: Sonar Scan
-      #   uses: SonarSource/sonarqube-scan-action@v2
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      #     SONAR_HOST_URL: ${{ vars.SONAR_SERVER_URL}}
+      - name: Sonar Scan
+        uses: SonarSource/sonarqube-scan-action@v2
+        env:
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ env.SONAR_SERVER_URL}}
 
-      # - name: SonarQube Quality Gate
-      #   uses: SonarSource/sonarqube-quality-gate-action@v1
-      #   env:
-      #     SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-      #     SONAR_HOST_URL: ${{ env.SONAR_SERVER_URL }}
+      - name: SonarQube Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1
+        env:
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ env.SONAR_SERVER_URL }}
 
-      - name: Install dependencies
-        run: npm install
+      # - name: Install dependencies
+      #   run: npm install
 
       # - name: Build Docker image
       #   run: |
