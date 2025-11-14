@@ -15,14 +15,14 @@ provider "aws" {
   region = var.region
 }
 
-resource "aws_ecr_repository" "app_repo" {
-  name                 = var.ecr_repo_name
-  image_tag_mutability = "MUTABLE"
+# resource "aws_ecr_repository" "app_repo" {
+#   name                 = var.ecr_repo_name
+#   image_tag_mutability = "MUTABLE"
 
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-}
+#   image_scanning_configuration {
+#     scan_on_push = true
+#   }
+# }
 
 # Get latest Ubuntu AMI
 data "aws_ami" "ubuntu" {
