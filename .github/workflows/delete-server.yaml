@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  create-server:
+  delete-server:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository

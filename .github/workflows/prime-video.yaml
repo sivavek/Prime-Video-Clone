@@ -13,9 +13,14 @@ on:
     #     description: 'Enter your AWS Account ID'
     #     required: true
     #     default: '123456789012'
+
+env:
+  SONAR_SERVER_URL: 'http://sonarqube.example.com':9000
+  SONAR_TOKEN: ''
+
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -34,8 +39,8 @@ jobs:
       # - name: SonarQube Quality Gate
       #   uses: SonarSource/sonarqube-quality-gate-action@v1
       #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      #     SONAR_HOST_URL: ${{ vars.SONAR_SERVER_URL }}
+      #     SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+      #     SONAR_HOST_URL: ${{ env.SONAR_SERVER_URL }}
 
       - name: Install dependencies
         run: npm install
