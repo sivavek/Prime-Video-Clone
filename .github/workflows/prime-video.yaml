@@ -31,10 +31,15 @@ jobs:
           node-version: '18'
 
       - name: Sonar Scan
-        uses: SonarSource/sonarqube-scan-action@v2
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ env.SONAR_SERVER_URL}}
+        uses: SonarSource/sonarqube-scan-action@v2  
+        with:
+          args: >
+            -Dsonar.projectKey=prime-video-clone
+            -Dsonar.projectName=prime-video-clone
+            -Dsonar.sources=.
 
       - name: SonarQube Quality Gate
         uses: SonarSource/sonarqube-quality-gate-action@v1
