@@ -30,8 +30,8 @@ terraform-code/**/.terraform.lock.hcl
 terraform-code/**/crash.log
 terraform-code/**/crash.*.log
 terraform-code/**/*.plan
-terraform-code/**/*.tfvars
-terraform-code/**/*.tfvars.json
+# terraform-code/**/*.tfvars
+# terraform-code/**/*.tfvars.json
 terraform-code/**/*_override.tf
 terraform-code/**/*_override.tf.json
 terraform-code/**/override.tf
