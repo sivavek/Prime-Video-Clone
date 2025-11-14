@@ -1,4 +1,4 @@
-name: Create Server using Terraform
+name: Destroy Server using Terraform
 on:
   workflow_dispatch:
 
