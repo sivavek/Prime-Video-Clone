@@ -41,16 +41,6 @@ jobs:
       - name: Trivy FileSystem Scan
         run: trivy fs . > trivy.txt
 
-      - name: Build Docker Image
-        run: docker build -t ${ECR_REPO_NAME} .
-
-      - name: Save Trivy Report as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-report
-          path: trivy.txt
-          retention-days: 1
-
       - name: Setup Amazon CLI
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -68,19 +58,28 @@ jobs:
           aws ecr get-login-password --region ap-south-1 \
           | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com
 
-      - name: Tag Docker Image
+      - name: Build Docker Image
         run: |
-          docker tag ${ECR_REPO_NAME} ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/${ECR_REPO_NAME}:${{ github.run_number }}
-          docker tag ${ECR_REPO_NAME} ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/${ECR_REPO_NAME}:latest
+          docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/${ECR_REPO_NAME}:${{ github.run_number }} .
+
+      - name: Tag Docker Image as Latest
+        run: |
+          docker tag ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/${ECR_REPO_NAME}:${{ github.run_number }} ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/${ECR_REPO_NAME}:latest
 
       - name: Push Docker Images
         run: |
          docker push ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/${ECR_REPO_NAME}:${{ github.run_number }}
          docker push ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/${ECR_REPO_NAME}:latest
 
-
       - name: Cleanup Docker Images
         run: |
           docker rmi ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/${ECR_REPO_NAME}:${{ github.run_number }}
           docker rmi ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/${ECR_REPO_NAME}:latest
           docker images
+
+      - name: Save Trivy Report as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy.txt
+          retention-days: 1
