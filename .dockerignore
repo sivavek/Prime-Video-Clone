@@ -1,0 +1,54 @@
+# Node modules
+node_modules
+npm-debug.log
+
+# Git
+.git
+.gitignore
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+
+# Build files
+dist
+build
+coverage
+
+# Docker related
+Dockerfile
+docker-compose*
+
+# Terraform / IaC
+terraform-code/
+*.tf
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform-code/**/.terraform/*
+terraform-code/**/.terraform.lock.hcl
+terraform-code/**/*.tfstate
+terraform-code/**/*.tfstate.*
+terraform-code/**/crash.log
+terraform-code/**/crash.*.log
+terraform-code/**/*.plan
+terraform-code/**/*.tfvars
+terraform-code/**/*.tfvars.json
+terraform-code/**/*_override.tf
+terraform-code/**/*_override.tf.json
+terraform-code/**/override.tf
+terraform-code/**/override.tf.json
+terraform-code/**/*.bak
+terraform-code/**/*.backup
+terraform-code/**/*.tmp
+
+
+# Editor / OS files
+.vscode
+.idea
+.DS_Store
+Thumbs.db
