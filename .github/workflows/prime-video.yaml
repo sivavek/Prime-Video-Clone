@@ -1,4 +1,4 @@
-name: CI - Amazon Prime Video Clone
+name: 02 CI - Amazon Prime Video Clone
 on:
   # push:
   #   branches:
