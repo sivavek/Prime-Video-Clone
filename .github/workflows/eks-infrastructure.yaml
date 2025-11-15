@@ -1,4 +1,4 @@
-name: 01 Terraform Infra Mgmt
+name: 03 CD EKS Infra Mgmt
 on:
   workflow_dispatch:
     inputs:
@@ -11,7 +11,7 @@ on:
           - destroy
 
 jobs:
-  manage-infrastructure:
+  manage-eks-infrastructure:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -31,24 +31,24 @@ jobs:
           terraform_wrapper: false
 
       - name: Initialize Terraform
-        working-directory: ./terraform-code/sonar
+        working-directory: ./terraform-code/eks-infra
         run: terraform init
 
       - name: Apply Terraform Configuration
         if: ${{ github.event.inputs.action == 'create' }}
-        working-directory: ./terraform-code/sonar
+        working-directory: ./terraform-code/eks-infra
         run: terraform apply -auto-approve
 
       - name: Destroy Terraform Configuration
         if: ${{ github.event.inputs.action == 'destroy' }}
-        working-directory: ./terraform-code/sonar
+        working-directory: ./terraform-code/eks-infra
         run: terraform destroy -auto-approve
 
       - name: Commit Terraform State
-        working-directory: ./terraform-code/sonar
+        working-directory: ./terraform-code/eks-infra
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add terraform.tfstate terraform.tfstate.backup
-          git commit -m "Update Terraform state after ${{ github.event.inputs.action }} [skip ci]" || echo "No changes to commit"
+          git commit -m "Update EKS Terraform state after ${{ github.event.inputs.action }} [skip ci]" || echo "No changes to commit"
           git push

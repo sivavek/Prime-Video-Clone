@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prime-video-clone
+  namespace: prime-video-clone
+  labels:
+    app: prime-video-clone
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: prime-video-clone
+  template:
+    metadata:
+      labels:
+        app: prime-video-clone
+    spec:
+      containers:
+      - name: prime-video-clone
+        image: 221428707951.dkr.ecr.ap-south-1.amazonaws.com/prime-video-clone:IMAGE_TAG
+        ports:
+        - containerPort: 3000
+          protocol: TCP
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5

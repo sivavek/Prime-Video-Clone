@@ -1,0 +1,172 @@
+name: 02 CI - Amazon Prime Video Clone
+on:
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag (leave empty to use run number)'
+        required: false
+        type: string
+
+env:
+  SONAR_HOST_URL: 'http://52.66.67.236:9000'
+  SONAR_TOKEN: 'squ_bf39d91fc4a6b7536f802f551a24791c5811582b'
+  AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+  AWS_REGION: ap-south-1
+  ECR_REPO_NAME: 'prime-video-clone'
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Sonar Scan
+        env:
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL}}
+        uses: SonarSource/sonarqube-scan-action@v2  
+        with:
+          args: >
+            -Dsonar.projectKey=prime-video-clone
+            -Dsonar.projectName=prime-video-clone
+            -Dsonar.sources=.
+            -Dsonar.qualitygate.wait=true
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Trivy FileSystem Scan
+        run: trivy fs . > trivy.txt
+
+      - name: Setup Amazon CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Create ECR Repository (if missing)
+        run: |
+          aws ecr describe-repositories --repository-names ${{ env.ECR_REPO_NAME }} \
+          || aws ecr create-repository --repository-name ${{ env.ECR_REPO_NAME }}
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ap-south-1 \
+          | docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
+
+      - name: Set Image Tag
+        id: set_tag
+        run: |
+          if [ -n "${{ github.event.inputs.image_tag }}" ]; then
+            echo "IMAGE_TAG=${{ github.event.inputs.image_tag }}" >> $GITHUB_ENV
+          else
+            echo "IMAGE_TAG=${{ github.run_number }}" >> $GITHUB_ENV
+          fi
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }} .
+
+      - name: Tag Docker Image as Latest
+        run: |
+          docker tag ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }} ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/${{ env.ECR_REPO_NAME }}:latest
+
+      - name: Push Docker Images
+        run: |
+         docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }}
+         docker push ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/${{ env.ECR_REPO_NAME }}:latest
+
+      - name: Update Kubernetes Manifest
+        run: |
+          sed -i "s|image:.*|image: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }}|g" k8s-manifests/deployment.yaml
+
+      - name: Commit Updated Manifest
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add k8s-manifests/deployment.yaml
+          git commit -m "Update image tag to ${{ env.IMAGE_TAG }} [skip ci]" || echo "No changes to commit"
+          git push
+
+      - name: Cleanup Docker Images
+        run: |
+          docker rmi ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }}
+          docker rmi ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/${{ env.ECR_REPO_NAME }}:latest
+          docker images
+
+      - name: Save Trivy Report as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy.txt
+          retention-days: 1
+
+  check:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: manual-approval
+    steps:
+      - name: Manual approval before deploy
+        run: echo "Manual approval received to proceed to deployment..."
+        
+  deploy:
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Setup Amazon CLI
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ap-south-1
+
+      # - name: Setup kubectl
+      #   uses: azure/setup-kubectl@v3
+      #   with:
+      #     version: 'latest'
+
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig --region ap-south-1 --name prime-video-eks-cluster
+
+      - name: Verify kubectl access
+        run: |
+          kubectl get nodes
+
+      - name: Show Deployment Status Before Deploy
+        run: |
+          kubectl get deployments -n prime-video-clone
+
+      - name: Deploy to EKS
+        run: |
+          kubectl apply -f k8s-manifests/deployment.yaml
+          kubectl apply -f k8s-manifests/service.yaml
+
+  summary:
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    steps:
+      - name: Summary
+        run: |
+          echo "### Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image Tag**: ${{ env.IMAGE_TAG }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECR Repository**: ${{ env.ECR_REPO_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image URI**: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }}" >> $GITHUB_STEP_SUMMARY
