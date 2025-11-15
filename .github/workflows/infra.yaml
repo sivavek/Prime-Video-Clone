@@ -1,4 +1,4 @@
-name: Terraform Infrastructure Management
+name: 01 Terraform Infra Mgmt
 on:
   workflow_dispatch:
     inputs:
