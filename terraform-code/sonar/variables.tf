@@ -49,7 +49,7 @@ variable "project_tag" {
 variable "volume_size" {
   description = "Size of the EBS volume in GB"
   type        = number
-  default     = 30
+  default     = 29
 }
 
 variable "ecr_repo_name" {
