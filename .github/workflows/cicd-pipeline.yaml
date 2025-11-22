@@ -11,8 +11,8 @@ on:
         type: string
 
 env:
-  SONAR_HOST_URL: 'http://52.66.67.236:9000'
-  SONAR_TOKEN: 'squ_bf39d91fc4a6b7536f802f551a24791c5811582b'
+  SONAR_HOST_URL: 'http://13.201.51.44:9000'
+  SONAR_TOKEN: 'squ_0d65ea6644b71cb4336ba4f5389affa8f82270d9'
   AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
   AWS_REGION: ap-south-1
   ECR_REPO_NAME: 'prime-video-clone'
