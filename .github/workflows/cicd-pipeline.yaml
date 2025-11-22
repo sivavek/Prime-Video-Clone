@@ -124,7 +124,7 @@ jobs:
         
   deploy:
     runs-on: self-hosted
-    needs: build
+    needs: [build, check]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
