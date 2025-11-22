@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: prime-video-clone
-        image: 221428707951.dkr.ecr.ap-south-1.amazonaws.com/prime-video-clone:IMAGE_TAG
+        image: 221428707951.dkr.ecr.ap-south-1.amazonaws.com/prime-video-clone:3
         ports:
         - containerPort: 3000
           protocol: TCP
