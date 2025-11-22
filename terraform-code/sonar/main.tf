@@ -279,7 +279,7 @@ resource "aws_instance" "main" {
       # "sudo systemctl enable jenkins",
 
       # # Get Jenkins initial login password
-      # "ip=$(curl -s ifconfig.me)",
+      "ip=$(curl -s ifconfig.me)",
       # "pass=$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)",
 
       # Output

@@ -30,7 +30,7 @@ output "security_group_id" {
 
 output "ssh_command" {
   description = "SSH command to connect to the instance"
-  value       = "ssh -i /path/to/${var.key_name}.pem ubuntu@${aws_instance.main.public_ip}"
+  value       = "ssh -i ~/Desktop/Sandbox/aws-ssh-keys/${var.key_name}.pem ubuntu@${aws_instance.main.public_ip}"
 }
 
 output "repository_url" {
