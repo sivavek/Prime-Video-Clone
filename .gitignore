@@ -42,3 +42,8 @@ terraform-code/**/*.tmp
 
 zdelete-later/
 zdelete-later/**/*
+
+terraform-code/eks-infra/terraform.tfstate
+terraform-code/eks-infra/terraform.tfstate.backup
+terraform-code/sonar/terraform.tfstate
+terraform-code/sonar/terraform.tfstate.backup
