@@ -11,8 +11,8 @@ on:
         type: string
 
 env:
-  SONAR_HOST_URL: 'http://13.126.148.125:9000'
-  SONAR_TOKEN: 'squ_b51342df3682ab47cd3f9397ab4e17a771e7581f'
+  SONAR_HOST_URL: 'http://3.109.217.248:9000'
+  SONAR_TOKEN: 'squ_89abb54b8850aedc7388300cc8c8cf925cfbeb42'
   AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
   AWS_REGION: ap-south-1
   ECR_REPO_NAME: 'prime-video-clone'
@@ -206,9 +206,9 @@ jobs:
           echo "- **Username**: admin" >> $GITHUB_STEP_SUMMARY
           echo "- **Password**: ${ARGOCD_PASSWORD}" >> $GITHUB_STEP_SUMMARY
 
-      - name: Deploy ArgoCD Application
-        run: |
-          kubectl apply -f argocd/application.yaml
+      # - name: Deploy ArgoCD Application
+      #   run: |
+      #     kubectl apply -f argocd/application.yaml
 
       - name: Deploy Prometheus
         run: |

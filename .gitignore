@@ -39,6 +39,8 @@ terraform-code/**/override.tf.json
 terraform-code/**/*.bak
 terraform-code/**/*.backup
 terraform-code/**/*.tmp
+terraform-code/**/terraform.tfstate
+terraform-code/**/terraform.tfstate.backup
 
 zdelete-later/
 zdelete-later/**/*
